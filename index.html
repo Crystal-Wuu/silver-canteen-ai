@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>银发食堂助餐补贴监管系统 | AI 智能问答</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4faf8;
+      --panel: #ffffff;
+      --panel-2: #eef8f5;
+      --line: #d8e9e4;
+      --line-soft: #e8f2ef;
+      --text: #24413b;
+      --muted: #66827b;
+      --faint: #91aaa4;
+      --accent: #35a889;
+      --accent-2: #4a9fc1;
+      --danger: #e66f78;
+      --ok: #43ad78;
+      --blue: #5599d2;
+      --shadow: 0 16px 44px rgba(74, 130, 116, .13);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+    }
+
+    button, textarea { font: inherit; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 26px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #77cbb3);
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(53, 168, 137, .22);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--faint);
+    }
+
+    .dot.ok { background: var(--ok); box-shadow: 0 0 10px rgba(67, 173, 120, .45); }
+    .dot.error { background: var(--danger); box-shadow: 0 0 10px rgba(230, 111, 120, .4); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      border-bottom: 1px solid var(--line);
+      background: var(--line);
+      gap: 1px;
+    }
+
+    .stat {
+      position: relative;
+      width: 100%;
+      border: 0;
+      background: var(--panel);
+      padding: 14px 18px;
+      min-width: 0;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: background .18s ease, box-shadow .18s ease;
+    }
+
+    .stat::after {
+      content: "查看详情";
+      position: absolute;
+      right: 16px;
+      bottom: 13px;
+      color: var(--faint);
+      font-size: 11px;
+      opacity: 0;
+      transform: translateY(3px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .stat:hover,
+    .stat:focus-visible {
+      z-index: 1;
+      background: #f7fcfa;
+      box-shadow: inset 0 -3px 0 var(--accent);
+      outline: none;
+    }
+
+    .stat:hover::after,
+    .stat:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat .value {
+      margin-top: 7px;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 23px;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .stat.accent .value { color: var(--accent); }
+    .stat.blue .value { color: var(--blue); }
+    .stat.green .value { color: var(--ok); }
+    .stat.red .value { color: var(--danger); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 286px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .sidebar {
+      min-height: 0;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: #f8fcfb;
+    }
+
+    .side-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+
+    .category {
+      padding: 12px 10px 4px;
+    }
+
+    .category-title {
+      padding: 5px 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .question-btn {
+      width: 100%;
+      min-height: 38px;
+      margin: 3px 0;
+      padding: 9px 10px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .question-btn:hover {
+      background: rgba(53, 168, 137, .08);
+      border-color: rgba(53, 168, 137, .24);
+      color: var(--text);
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      background: #f4faf8;
+    }
+
+    .messages {
+      min-height: 0;
+      overflow: auto;
+      padding: 24px;
+    }
+
+    .welcome {
+      max-width: 760px;
+      margin: 8vh auto 0;
+      padding: 32px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .welcome h2 {
+      margin: 0 0 12px;
+      font-size: 25px;
+      letter-spacing: 0;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .capability {
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      padding: 12px;
+      background: #f7fbfa;
+    }
+
+    .capability b {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .capability span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .msg {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .msg.user {
+      grid-template-columns: minmax(0, 1fr) 34px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .msg.user .avatar {
+      grid-column: 2;
+      color: var(--accent-2);
+    }
+
+    .bubble {
+      min-width: 0;
+    }
+
+    .msg.user .bubble {
+      grid-column: 1;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .user-text {
+      max-width: min(640px, 100%);
+      padding: 11px 14px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      line-height: 1.65;
+    }
+
+    .answer {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .section {
+      padding: 15px 17px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .section:last-child { border-bottom: 0; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 3px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .sql {
+      position: relative;
+      overflow: auto;
+      padding: 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background: #f3f8fa;
+      color: #386b7a;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre;
+    }
+
+    .copy {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #ffffff;
+      color: var(--muted);
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .copy:hover { color: var(--text); border-color: var(--accent); }
+
+    .explain {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      max-height: 360px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 640px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #eef7f5;
+      color: var(--accent);
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line-soft);
+      color: #46645d;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover td { background: rgba(53, 168, 137, .07); }
+
+    .row-count {
+      margin-top: 7px;
+      color: var(--faint);
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .interpretation {
+      color: #48665f;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .source {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      margin-left: 8px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: rgba(74, 159, 193, .12);
+      color: var(--accent-2);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .error {
+      border: 1px solid rgba(230, 111, 120, .35);
+      background: rgba(230, 111, 120, .09);
+      color: #a64550;
+      padding: 13px 15px;
+      border-radius: 8px;
+      line-height: 1.65;
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 16px 24px 18px;
+      background: #ffffff;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 104px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 48px;
+      max-height: 150px;
+      resize: none;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      outline: none;
+      background: #f9fcfb;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--faint); }
+
+    .send {
+      height: 48px;
+      border: 0;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--accent), #76c8b2);
+      color: #ffffff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .send:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    kbd {
+      padding: 1px 5px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .loading {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--muted);
+    }
+
+    .loading span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .35; transform: scale(.85); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .detail-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      background: rgba(35, 70, 62, .28);
+      padding: 28px;
+    }
+
+    .detail-modal.open {
+      display: grid;
+      place-items: center;
+    }
+
+    .detail-dialog {
+      width: min(1180px, 100%);
+      max-height: calc(100vh - 56px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(47, 100, 86, .22);
+    }
+
+    .detail-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fcfb;
+    }
+
+    .detail-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .detail-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .detail-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .detail-close:hover { color: var(--danger); border-color: var(--danger); }
+
+    .detail-content {
+      overflow: auto;
+      padding: 20px;
+    }
+
+    .detail-section + .detail-section { margin-top: 24px; }
+
+    .detail-section-title {
+      margin-bottom: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border: 1px solid var(--line-soft);
+      border-radius: 7px;
+      background: #fbfefd;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 180px) minmax(120px, 1fr) 100px;
+      gap: 12px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .bar-label {
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 14px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #e9f3f0;
+    }
+
+    .bar-fill {
+      height: 100%;
+      min-width: 3px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), #74c8b1);
+    }
+
+    .bar-value {
+      color: var(--text);
+      text-align: right;
+      font-family: Consolas, monospace;
+    }
+
+    .detail-loading, .detail-error {
+      padding: 30px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .detail-error { color: var(--danger); }
+
+    @media (max-width: 980px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .main { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { padding: 0 16px; }
+      .brand h1 { font-size: 15px; }
+      .status { font-size: 12px; }
+      .messages, .composer { padding-left: 16px; padding-right: 16px; }
+      .welcome-grid { grid-template-columns: 1fr; }
+      .input-row { grid-template-columns: 1fr; }
+      .send { width: 100%; }
+      .detail-modal { padding: 10px; }
+      .detail-dialog { max-height: calc(100vh - 20px); }
+      .bar-row { grid-template-columns: 90px minmax(80px, 1fr) 68px; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">AI</div>
+        <div>
+          <h1>银发食堂助餐补贴监管系统</h1>
+          <p>自然语言问答 · NL2SQL · 数据解读</p>
+        </div>
+      </div>
+      <div class="status">
+        <span class="dot" id="dbDot"></span>
+        <span id="dbStatus">正在检测数据库连接</span>
+      </div>
+    </header>
+
+    <section class="stats">
+      <button class="stat green" type="button" data-metric="elders">
+        <div class="label">正常账户老人</div>
+        <div class="value" id="activeElders">--</div>
+      </button>
+      <button class="stat blue" type="button" data-metric="dining">
+        <div class="label">累计就餐记录</div>
+        <div class="value" id="monthlyDining">--</div>
+      </button>
+      <button class="stat accent" type="button" data-metric="subsidy">
+        <div class="label">累计补贴金额</div>
+        <div class="value" id="monthlySubsidy">--</div>
+      </button>
+      <button class="stat red" type="button" data-metric="warnings">
+        <div class="label">待处理预警</div>
+        <div class="value" id="pendingWarnings">--</div>
+      </button>
+      <button class="stat" type="button" data-metric="points">
+        <div class="label">正常运营助餐点</div>
+        <div class="value" id="activePoints">--</div>
+      </button>
+    </section>
+
+    <main class="main">
+      <aside class="sidebar">
+        <div class="side-head">示例问题</div>
+        <div id="suggestions"></div>
+      </aside>
+
+      <section class="workspace">
+        <div class="messages" id="messages">
+          <div class="welcome" id="welcome">
+            <h2>用一句话查询你的数据库</h2>
+            <p>输入“列出所有高风险预警”“按助餐点统计就餐人次和补贴总额排行”等自然语言问题，系统会生成 SQL Server 查询语句，执行只读查询，并给出结果解读。</p>
+            <div class="welcome-grid">
+              <div class="capability"><b>自然语言转 SQL</b><span>同步呈现生成的 SQL，便于了解数据库查询逻辑。</span></div>
+              <div class="capability"><b>监管数据分析</b><span>覆盖老人、补贴资格、助餐点、结算单和异常预警。</span></div>
+              <div class="capability"><b>只读安全执行</b><span>后端拒绝写入、删除、建表等危险操作。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <form class="composer" id="composer">
+          <div class="input-row">
+            <textarea id="question" rows="1" placeholder="例如：列出所有高风险或待处理的异常预警"></textarea>
+            <button class="send" id="sendBtn" type="submit">发送</button>
+          </div>
+          <div class="hint"><kbd>Enter</kbd> 发送，<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div class="detail-modal" id="detailModal" aria-hidden="true">
+    <div class="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="detail-head">
+        <div>
+          <h2 id="detailTitle">统计详情</h2>
+          <p id="detailSummary"></p>
+        </div>
+        <button class="detail-close" id="detailClose" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="detail-content" id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      dbDot: document.getElementById("dbDot"),
+      dbStatus: document.getElementById("dbStatus"),
+      activeElders: document.getElementById("activeElders"),
+      monthlyDining: document.getElementById("monthlyDining"),
+      monthlySubsidy: document.getElementById("monthlySubsidy"),
+      pendingWarnings: document.getElementById("pendingWarnings"),
+      activePoints: document.getElementById("activePoints"),
+      suggestions: document.getElementById("suggestions"),
+      messages: document.getElementById("messages"),
+      welcome: document.getElementById("welcome"),
+      question: document.getElementById("question"),
+      sendBtn: document.getElementById("sendBtn"),
+      composer: document.getElementById("composer"),
+      detailModal: document.getElementById("detailModal"),
+      detailTitle: document.getElementById("detailTitle"),
+      detailSummary: document.getElementById("detailSummary"),
+      detailContent: document.getElementById("detailContent"),
+      detailClose: document.getElementById("detailClose")
+    };
+
+    const DEMO_MODE =
+      location.hostname.endsWith("github.io") ||
+      location.protocol === "file:" ||
+      new URLSearchParams(location.search).get("demo") === "1";
+
+    const DEMO_SUGGESTIONS = [
+      { category: "老人查询", q: "列出所有80岁以上的高龄老人" },
+      { category: "老人查询", q: "查询最近20条老人就餐记录" },
+      { category: "补贴分析", q: "统计每种补贴类型的老人人数和已发放补贴金额" },
+      { category: "补贴分析", q: "按助餐点统计就餐人次和补贴总额排行" },
+      { category: "结算监管", q: "查看各助餐点结算单的审核和结算情况" },
+      { category: "风险预警", q: "列出所有高风险或待处理的异常预警" },
+      { category: "系统说明", q: "这个智能问答系统能做什么" }
+    ];
+
+    let loading = false;
+
+    function demoResponse(question) {
+      if (question.includes("80岁") || question.includes("高龄老人")) {
+        return {
+          source: "demo",
+          sql: "SELECT ElderlyID, Name, Gender, Age, Address, AccountStatus\nFROM Elderly\nWHERE Age >= 80\nORDER BY Age DESC, Name;",
+          sql_explanation: "查询年龄大于等于80岁的老人，并按照年龄降序排列。",
+          columns: ["老人编号", "姓名", "性别", "年龄", "居住地址", "账户状态"],
+          rows: [
+            ["E045", "潘建军", "男", 90, "厦门市同安区新民路45号", "正常"],
+            ["E037", "侯长生", "男", 88, "厦门市海沧区东孚路37号", "正常"],
+            ["E029", "丁志远", "男", 87, "厦门市集美区天马山路29号", "正常"],
+            ["E018", "曾秀英", "女", 87, "厦门市湖里区东渡路18号", "正常"],
+            ["E006", "陈淑华", "女", 86, "厦门市思明区华新路6号", "正常"],
+            ["E025", "邓国强", "男", 85, "厦门市集美区学院路25号", "正常"],
+            ["E033", "乔建平", "男", 84, "厦门市海沧区鳌冠路33号", "正常"],
+            ["E009", "吴建华", "男", 83, "厦门市思明区文屏路9号", "正常"],
+            ["E005", "赵德胜", "男", 82, "厦门市思明区虎园路5号", "正常"],
+            ["E015", "许海龙", "男", 82, "厦门市湖里区金山路15号", "正常"]
+          ],
+          row_count: 12,
+          interpretation: "共识别出12位80岁以上老人，最高年龄为90岁。高龄老人分布在多个行政区，建议结合其补贴资格和近期就餐频率，持续关注服务覆盖情况。"
+        };
+      }
+
+      if (question.includes("助餐点") && (question.includes("排行") || question.includes("人次"))) {
+        return {
+          source: "demo",
+          sql: "SELECT dp.DiningPointName, COUNT(*) AS DiningCount,\n       SUM(dr.SubsidyAmount) AS TotalSubsidy\nFROM DiningRecord dr\nJOIN DiningPoint dp ON dp.DiningPointID = dr.DiningPointID\nGROUP BY dp.DiningPointName\nORDER BY DiningCount DESC;",
+          sql_explanation: "按助餐点汇总累计就餐人次、消费金额和补贴金额。",
+          columns: ["助餐点", "累计就餐人次", "消费总额", "补贴总额"],
+          rows: [
+            ["中山路社区食堂", 348, 5826.00, 2784.50],
+            ["湖里老年餐厅", 342, 5712.00, 2698.00],
+            ["集美爱心食堂", 335, 5598.00, 2612.50],
+            ["海沧阳光厨房", 326, 5445.00, 2534.00],
+            ["同安惠民餐厅", 313, 5230.00, 2441.50]
+          ],
+          row_count: 5,
+          interpretation: "五个助餐点累计服务量较为均衡，中山路社区食堂的就餐人次和补贴金额最高。同安惠民餐厅服务量相对较低，可进一步分析老人覆盖范围和运营时段。"
+        };
+      }
+
+      if (question.includes("补贴类型") || question.includes("补贴金额")) {
+        return {
+          source: "demo",
+          sql: "SELECT sq.SubsidyType, sq.SubsidyLevel,\n       COUNT(DISTINCT sq.ElderlyID) AS ElderlyCount,\n       SUM(dr.SubsidyAmount) AS TotalSubsidy\nFROM SubsidyQualification sq\nLEFT JOIN DiningRecord dr ON dr.ElderlyID = sq.ElderlyID\nGROUP BY sq.SubsidyType, sq.SubsidyLevel\nORDER BY TotalSubsidy DESC;",
+          sql_explanation: "统计各补贴类型对应的老人数量和累计补贴金额。",
+          columns: ["补贴类型", "补贴等级", "老人人数", "累计补贴金额"],
+          rows: [
+            ["高龄", "二级", 14, 9248.00],
+            ["低保", "一级", 10, 8130.00],
+            ["普通", "三级", 20, 7955.50],
+            ["特困", "一级", 6, 5864.00]
+          ],
+          row_count: 4,
+          interpretation: "普通补贴覆盖人数最多，高龄补贴累计发放金额最高。特困老人数量较少，但单人平均补贴较高，符合其较高的补贴比例与单次上限。"
+        };
+      }
+
+      if (question.includes("预警") || question.includes("风险")) {
+        return {
+          source: "demo",
+          sql: "SELECT aw.WarningID, e.Name, dp.DiningPointName,\n       aw.AbnormalType, aw.RiskLevel, aw.HandleStatus\nFROM AbnormalWarning aw\nJOIN Elderly e ON e.ElderlyID = aw.ElderlyID\nJOIN DiningPoint dp ON dp.DiningPointID = aw.DiningPointID\nWHERE aw.RiskLevel = N'高' OR aw.HandleStatus IN (N'待处理', N'处理中')\nORDER BY aw.WarningTime DESC;",
+          sql_explanation: "筛选高风险或尚未完成处理的异常预警。",
+          columns: ["预警编号", "老人姓名", "助餐点", "异常类型", "风险等级", "处理状态"],
+          rows: [
+            ["W020", "潘建军", "同安惠民餐厅", "身份异常", "高", "待处理"],
+            ["W018", "曾秀英", "湖里老年餐厅", "超额补贴", "高", "处理中"],
+            ["W015", "邓国强", "集美爱心食堂", "超额补贴", "高", "待处理"],
+            ["W011", "赵德胜", "中山路社区食堂", "重复就餐", "中", "待处理"],
+            ["W006", "陈淑华", "中山路社区食堂", "身份异常", "高", "处理中"]
+          ],
+          row_count: 10,
+          interpretation: "当前共有10条高风险或待处理预警，其中身份异常和超额补贴需要优先核查。建议监管人员先处理高风险记录，并复核相关就餐记录和补贴资格。"
+        };
+      }
+
+      if (question.includes("结算")) {
+        return {
+          source: "demo",
+          sql: "SELECT dp.DiningPointName, ss.SettlementPeriod,\n       ss.TotalDiningCount, ss.TotalSubsidyAmount,\n       ss.AuditStatus, ss.SettlementStatus\nFROM SettlementSheet ss\nJOIN DiningPoint dp ON dp.DiningPointID = ss.DiningPointID\nORDER BY ss.SettlementPeriod DESC, ss.TotalSubsidyAmount DESC;",
+          sql_explanation: "查看各助餐点月度结算单的审核和结算状态。",
+          columns: ["助餐点", "结算期", "就餐人次", "补贴金额", "审核状态", "结算状态"],
+          rows: [
+            ["中山路社区食堂", "2025-11", 45, 368.50, "审核通过", "已结算"],
+            ["湖里老年餐厅", "2025-11", 45, 354.00, "审核通过", "已结算"],
+            ["集美爱心食堂", "2025-11", 45, 346.50, "审核通过", "已结算"],
+            ["海沧阳光厨房", "2025-11", 45, 339.00, "审核通过", "已结算"],
+            ["同安惠民餐厅", "2025-11", 45, 331.50, "审核通过", "已结算"]
+          ],
+          row_count: 30,
+          interpretation: "2025年11月五个助餐点结算单均已审核并完成结算。各助餐点服务量接近，补贴金额差异主要来自老人补贴类型和等级不同。"
+        };
+      }
+
+      if (question.includes("能做什么") || question.includes("系统")) {
+        return {
+          source: "demo",
+          sql: null,
+          columns: [],
+          rows: [],
+          row_count: 0,
+          interpretation: "本系统支持自然语言转 SQL、老人信息查询、助餐点运营分析、补贴发放统计、结算监管和异常预警分析，可帮助使用者快速获取并理解业务数据。"
+        };
+      }
+
+      return {
+        source: "demo",
+        sql: "SELECT TOP 20 e.Name, dp.DiningPointName, dr.DiningTime,\n       dr.MealName, dr.TotalConsumeAmount, dr.SubsidyAmount\nFROM DiningRecord dr\nJOIN Elderly e ON e.ElderlyID = dr.ElderlyID\nJOIN DiningPoint dp ON dp.DiningPointID = dr.DiningPointID\nORDER BY dr.DiningTime DESC;",
+        sql_explanation: "查询最近20条老人就餐记录。",
+        columns: ["老人姓名", "助餐点", "就餐时间", "餐食名称", "消费金额", "补贴金额"],
+        rows: [
+          ["潘建军", "同安惠民餐厅", "2025-11-27 12:12:00", "营养健康套餐", 18.00, 8.00],
+          ["熊桂芳", "同安惠民餐厅", "2025-11-27 12:04:00", "厦门炒米粉", 15.00, 7.50],
+          ["侯长生", "海沧阳光厨房", "2025-11-27 11:58:00", "姜母鸭套餐", 20.00, 8.00],
+          ["丁志远", "集美爱心食堂", "2025-11-27 11:52:00", "同安封肉套餐", 18.00, 8.00],
+          ["曾秀英", "湖里老年餐厅", "2025-11-27 11:46:00", "厦门沙茶面套餐", 15.00, 7.50]
+        ],
+        row_count: 20,
+        interpretation: "最近就餐记录覆盖多个行政区助餐点，消费金额主要集中在15至20元，补贴金额符合各类补贴规则和单次上限。"
+      };
+    }
+
+    function html(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function resizeTextarea() {
+      els.question.style.height = "auto";
+      els.question.style.height = Math.min(els.question.scrollHeight, 150) + "px";
+    }
+
+    function scrollBottom() {
+      requestAnimationFrame(() => {
+        els.messages.scrollTop = els.messages.scrollHeight;
+      });
+    }
+
+    function setLoading(state) {
+      loading = state;
+      els.sendBtn.disabled = state;
+      els.sendBtn.textContent = state ? "查询中" : "发送";
+    }
+
+    async function init() {
+      await Promise.all([checkDb(), loadStats(), loadSuggestions()]);
+    }
+
+    async function checkDb() {
+      if (DEMO_MODE) {
+        els.dbDot.className = "dot ok";
+        els.dbStatus.textContent = "数据浏览模式";
+        return;
+      }
+      try {
+        const res = await fetch("/api/test_db");
+        const data = await res.json();
+        if (data.status === "ok") {
+          els.dbDot.className = "dot ok";
+          els.dbStatus.textContent = `${data.database} 已连接 · ${data.llm_enabled ? "LLM 已启用" : "本地规则模式"}`;
+        } else {
+          els.dbDot.className = "dot error";
+          els.dbStatus.textContent = `数据库未连接 · ${data.llm_enabled ? "LLM 已启用" : "本地规则模式"}`;
+        }
+      } catch (err) {
+        els.dbDot.className = "dot error";
+        els.dbStatus.textContent = "后端服务未响应";
+      }
+    }
+
+    async function loadStats() {
+      if (DEMO_MODE) {
+        els.activeElders.textContent = "45";
+        els.monthlyDining.textContent = "1,664";
+        els.monthlySubsidy.textContent = "31,197.50";
+        els.pendingWarnings.textContent = "10";
+        els.activePoints.textContent = "5";
+        return;
+      }
+      try {
+        const res = await fetch("/api/quick_stats");
+        const data = await res.json();
+        if (data.error) return;
+        els.activeElders.textContent = data.active_elders ?? "--";
+        els.monthlyDining.textContent = data.monthly_dining ?? "--";
+        els.monthlySubsidy.textContent = data.monthly_subsidy != null ? Number(data.monthly_subsidy).toFixed(2) : "--";
+        els.pendingWarnings.textContent = data.pending_warnings ?? "--";
+        els.activePoints.textContent = data.active_points ?? "--";
+      } catch (err) {}
+    }
+
+    async function loadSuggestions() {
+      try {
+        let list = DEMO_SUGGESTIONS;
+        if (!DEMO_MODE) {
+          const res = await fetch("/api/suggested_questions");
+          list = await res.json();
+        }
+        const groups = {};
+        list.forEach(item => {
+          groups[item.category] = groups[item.category] || [];
+          groups[item.category].push(item.q);
+        });
+        els.suggestions.innerHTML = Object.entries(groups).map(([category, questions]) => `
+          <div class="category">
+            <div class="category-title">${html(category)}</div>
+            ${questions.map(q => `<button class="question-btn" type="button" data-q="${html(q)}">${html(q)}</button>`).join("")}
+          </div>
+        `).join("");
+      } catch (err) {
+        els.suggestions.innerHTML = '<div class="category"><button class="question-btn" type="button">列出所有高风险或待处理的异常预警</button></div>';
+      }
+    }
+
+    function addUserMessage(text) {
+      els.welcome?.remove();
+      const node = document.createElement("div");
+      node.className = "msg user";
+      node.innerHTML = `
+        <div class="bubble"><div class="user-text">${html(text)}</div></div>
+        <div class="avatar">我</div>
+      `;
+      els.messages.appendChild(node);
+      scrollBottom();
+    }
+
+    function addLoadingMessage() {
+      const node = document.createElement("div");
+      node.className = "msg";
+      node.id = "loadingMsg";
+      node.innerHTML = `
+        <div class="avatar">AI</div>
+        <div class="bubble"><div class="loading"><span></span>正在理解问题、生成 SQL 并查询数据库...</div></div>
+      `;
+      els.messages.appendChild(node);
+      scrollBottom();
+    }
+
+    function removeLoadingMessage() {
+      document.getElementById("loadingMsg")?.remove();
+    }
+
+    function addErrorMessage(message, sql) {
+      const node = document.createElement("div");
+      node.className = "msg";
+      node.innerHTML = `
+        <div class="avatar">AI</div>
+        <div class="bubble">
+          <div class="error">
+            <strong>处理失败</strong><br>
+            ${html(message)}
+            ${sql ? `<pre class="sql" style="margin-top:10px">${html(sql)}</pre>` : ""}
+          </div>
+        </div>
+      `;
+      els.messages.appendChild(node);
+      scrollBottom();
+    }
+
+    function addAnswerMessage(data) {
+      const node = document.createElement("div");
+      node.className = "msg";
+      const sourceText = data.source === "llm" ? "DeepSeek" : data.source === "demo" ? "数据示例" : "本地规则";
+      const sqlSection = data.sql ? `
+        <div class="section">
+          <div class="section-title">生成的 SQL <span class="source">${sourceText}</span></div>
+          <pre class="sql"><button class="copy" type="button">复制</button><code>${html(data.sql)}</code></pre>
+          ${data.sql_explanation ? `<div class="explain">${html(data.sql_explanation)}</div>` : ""}
+        </div>
+      ` : "";
+
+      const maxRows = 80;
+      const rows = (data.rows || []).slice(0, maxRows);
+      const tableSection = data.columns && data.columns.length ? `
+        <div class="section">
+          <div class="section-title">查询结果</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>${data.columns.map(col => `<th>${html(col)}</th>`).join("")}</tr></thead>
+              <tbody>
+                ${rows.map(row => `<tr>${row.map(cell => `<td title="${html(cell)}">${html(cell ?? "NULL")}</td>`).join("")}</tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="row-count">共 ${data.row_count ?? 0} 条记录${(data.row_count || 0) > maxRows ? `，当前展示前 ${maxRows} 条` : ""}</div>
+        </div>
+      ` : "";
+
+      node.innerHTML = `
+        <div class="avatar">AI</div>
+        <div class="bubble">
+          <div class="answer">
+            ${sqlSection}
+            ${tableSection}
+            <div class="section">
+              <div class="section-title">分析解读</div>
+              <div class="interpretation">${html(data.interpretation || "已完成查询。").replace(/\n/g, "<br>")}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      const copyBtn = node.querySelector(".copy");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          await navigator.clipboard.writeText(data.sql);
+          copyBtn.textContent = "已复制";
+          setTimeout(() => copyBtn.textContent = "复制", 1300);
+        });
+      }
+      els.messages.appendChild(node);
+      scrollBottom();
+    }
+
+    function formatNumber(value, unit = "") {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return `${value ?? 0}${unit}`;
+      const formatted = Number.isInteger(number)
+        ? number.toLocaleString("zh-CN")
+        : number.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return `${formatted}${unit}`;
+    }
+
+    function closeStatDetail() {
+      els.detailModal.classList.remove("open");
+      els.detailModal.setAttribute("aria-hidden", "true");
+    }
+
+    function renderStatDetail(data) {
+      const chartRows = data.chart_rows || [];
+      const maxValue = Math.max(...chartRows.map(row => Number(row[1]) || 0), 1);
+      const chart = chartRows.map(row => {
+        const value = Number(row[1]) || 0;
+        return `
+          <div class="bar-row">
+            <div class="bar-label" title="${html(row[0])}">${html(row[0])}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max((value / maxValue) * 100, 1)}%"></div></div>
+            <div class="bar-value">${html(formatNumber(value, data.unit || ""))}</div>
+          </div>
+        `;
+      }).join("");
+
+      const columns = data.columns || [];
+      const rows = data.rows || [];
+      const table = columns.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${columns.map(col => `<th>${html(col)}</th>`).join("")}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${row.map(cell => `<td title="${html(cell)}">${html(cell ?? "NULL")}</td>`).join("")}</tr>`).join("")}</tbody>
+          </table>
+        </div>
+        <div class="row-count">当前展示 ${rows.length} 条记录</div>
+      ` : '<div class="detail-loading">暂无明细记录</div>';
+
+      els.detailContent.innerHTML = `
+        <section class="detail-section">
+          <div class="detail-section-title">数据分布</div>
+          <div class="bar-chart">${chart || '<div class="detail-loading">暂无统计数据</div>'}</div>
+        </section>
+        <section class="detail-section">
+          <div class="detail-section-title">明细记录</div>
+          ${table}
+        </section>
+      `;
+    }
+
+    async function openStatDetail(metric) {
+      els.detailTitle.textContent = "正在加载统计详情";
+      els.detailSummary.textContent = "";
+      els.detailContent.innerHTML = '<div class="detail-loading">正在查询数据库并生成可视化...</div>';
+      els.detailModal.classList.add("open");
+      els.detailModal.setAttribute("aria-hidden", "false");
+
+      try {
+        const res = await fetch(`/api/stat_detail/${encodeURIComponent(metric)}`);
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "加载失败");
+        els.detailTitle.textContent = data.title;
+        els.detailSummary.textContent = data.summary;
+        renderStatDetail(data);
+      } catch (err) {
+        els.detailTitle.textContent = "统计详情加载失败";
+        els.detailContent.innerHTML = `<div class="detail-error">${html(err.message)}</div>`;
+      }
+    }
+
+    async function ask(question) {
+      if (loading || !question.trim()) return;
+      addUserMessage(question);
+      setLoading(true);
+      addLoadingMessage();
+
+      try {
+        if (DEMO_MODE) {
+          await new Promise(resolve => setTimeout(resolve, 650));
+          removeLoadingMessage();
+          addAnswerMessage(demoResponse(question));
+          return;
+        }
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        removeLoadingMessage();
+        if (!res.ok || data.error) {
+          addErrorMessage(data.error || "请求失败", data.sql);
+        } else {
+          addAnswerMessage(data);
+          loadStats();
+        }
+      } catch (err) {
+        removeLoadingMessage();
+        addErrorMessage("无法连接后端服务：" + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    els.composer.addEventListener("submit", event => {
+      event.preventDefault();
+      const question = els.question.value.trim();
+      els.question.value = "";
+      resizeTextarea();
+      ask(question);
+    });
+
+    els.question.addEventListener("input", resizeTextarea);
+    els.question.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        els.composer.requestSubmit();
+      }
+    });
+
+    els.suggestions.addEventListener("click", event => {
+      const btn = event.target.closest(".question-btn");
+      if (!btn) return;
+      const q = btn.dataset.q || btn.textContent;
+      els.question.value = q;
+      resizeTextarea();
+      els.question.focus();
+    });
+
+    document.querySelector(".stats").addEventListener("click", event => {
+      const card = event.target.closest(".stat[data-metric]");
+      if (card) openStatDetail(card.dataset.metric);
+    });
+
+    els.detailClose.addEventListener("click", closeStatDetail);
+    els.detailModal.addEventListener("click", event => {
+      if (event.target === els.detailModal) closeStatDetail();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeStatDetail();
+    });
+
+    init();
+  </script>
+</body>
+</html>
